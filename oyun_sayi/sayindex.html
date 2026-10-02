@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çift Kişilik Sayı Avı</title>
+    <!-- Tailwind CSS for modern responsive utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-animation {
+            animation: popIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-700 flex flex-col justify-between py-6 px-4 sm:px-6">
+
+    <header class="max-w-md mx-auto text-center mb-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">Çift Kişilik Sayı Avı</h1>
+        <p class="text-sm text-slate-500 mt-1">Arkadaşına karşı rakamları farklı sayı tahmin etmece!</p>
+    </header>
+
+    <main class="max-w-md w-full mx-auto flex-1 flex flex-col gap-5">
+
+        <!-- AŞAMA 1: Gizli Sayı Belirleme Ekranı -->
+        <div id="setupPhase" class="bg-white rounded-2xl p-6 card-shadow border border-slate-100">
+            <div class="text-center mb-4">
+                <span class="text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">1. Adım: Gizli Sayı</span>
+                <h2 class="text-lg font-bold text-slate-800 mt-3">Oyuncu 1, Gizli Sayıyı Gir</h2>
+                <p class="text-xs text-slate-400 mt-1">4 basamaklı ve rakamları birbirinden farklı olmalı.</p>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="relative">
+                    <input type="password" id="secretInput" maxlength="4" placeholder="••••" 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xl font-bold text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+                    <button type="button" onclick="toggleSecretVisibility()" class="absolute right-3 top-3.5 text-xs text-slate-400 hover:text-slate-600 font-medium">Göster</button>
+                </div>
+                <button onclick="setSecretCode()" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold py-3 rounded-xl shadow-lg shadow-indigo-100 transition-all">
+                    Oyunu Başlat
+                </button>
+            </div>
+            <div id="setupMessage" class="mt-3 text-center text-xs font-medium text-rose-500 h-4"></div>
+        </div>
+
+        <!-- AŞAMA 2: Tahmin Etme Ekranı (Başlangıçta Gizli) -->
+        <div id="gamePhase" class="hidden flex-1 flex flex-col gap-5">
+            <!-- Bilgi ve Girdi Paneli -->
+            <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-100">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">2. Adım: Tahmin Sırası</span>
+                    <button onclick="toggleRules()" class="text-xs text-slate-400 hover:text-slate-600 underline">Kurallar</button>
+                </div>
+                <div id="rulesBox" class="text-xs text-slate-500 space-y-1 mb-3 hidden bg-slate-50 p-3 rounded-xl">
+                    <p>• <span class="font-bold text-emerald-600">+1</span>: Doğru rakam ve doğru yer.</p>
+                    <p>• <span class="font-bold text-amber-600">-1</span>: Doğru rakam ama yanlış yer.</p>
+                </div>
+                
+                <div class="flex gap-2">
+                    <input type="text" id="guessInput" maxlength="4" placeholder="Örn: 5291" 
+                        class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                        onkeypress="handleKeyPress(event)">
+                    <button onclick="makeGuess()" 
+                        class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-indigo-100 transition-all">
+                        Tahmin Et
+                    </button>
+                </div>
+                <div id="gameMessage" class="mt-2 text-center text-xs font-medium text-rose-500 h-5"></div>
+            </div>
+
+            <!-- Tahmin Geçmişi Paneli -->
+            <div class="bg-white rounded-2xl p-5 card-shadow border border-slate-100 flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold text-slate-700">Tahmin Geçmişi</h2>
+                    <span id="attemptCounter" class="text-xs text-slate-400 font-medium">Toplam: 0 deneme</span>
+                </div>
+                <div id="historyList" class="flex-1 overflow-y-auto max-h-56 space-y-2 pr-1">
+                    <div class="text-center py-8 text-slate-300 text-sm">Henüz tahmin yapılmadı.</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Kazanma / Tebrikler Modalı -->
+    <div id="winModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full card-shadow pop-animation text-center">
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🏆</div>
+            <h3 class="text-xl font-bold text-slate-800">Tebrikler Oyuncu 2!</h3>
+            <p class="text-sm text-slate-500 mt-2">Gizli sayıyı <span id="finalAttempts" class="font-bold text-slate-700"></span> denemede başarıyla buldun.</p>
+            <button onclick="resetGame()" class="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-indigo-100 transition-all">
+                Yeni Oyun Kur (Rol Değiş)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let secretCode = "";
+        let attempts = 0;
+        let gameActive = false;
+
+        // Gizli sayıyı metin/şifre modunda gösterip gizleme
+        function toggleSecretVisibility() {
+            const input = document.getElementById('secretInput');
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        // Hata mesajı gösterme yardımcı fonksiyonu
+        function showSetupMessage(msg) {
+            const el = document.getElementById('setupMessage');
+            el.innerText = msg;
+            setTimeout(() => { if(el.innerText === msg) el.innerText = ""; }, 3000);
+        }
+
+        function showGameMessage(msg) {
+            const el = document.getElementById('gameMessage');
+            el.innerText = msg;
+            setTimeout(() => { if(el.innerText === msg) el.innerText = ""; }, 3000);
+        }
+
+        // 1. Oyuncunun girdiği gizli sayıyı doğrulama ve kaydetme
+        function setSecretCode() {
+            const code = document.getElementById('secretInput').value.trim();
+
+            if (code.length !== 4 || isNaN(code)) {
+                showSetupMessage("Gizli sayı tam 4 basamaklı bir sayı olmalıdır!");
+                return;
+            }
+
+            // Rakamlar birbirinden farklı mı kontrolü
+            const uniqueSet = new Set(code);
+            if (uniqueSet.size !== 4) {
+                showSetupMessage("Hata: Rakamlar birbirinden farklı olmalıdır!");
+                return;
+            }
+
+            secretCode = code;
+            attempts = 0;
+            gameActive = true;
+
+            // Aşamalar arası geçiş
+            document.getElementById('setupPhase').classList.add('hidden');
+            document.getElementById('gamePhase').classList.remove('hidden');
+            
+            // Alanları temizle
+            document.getElementById('secretInput').value = "";
+            document.getElementById('secretInput').type = 'password';
+            document.getElementById('guessInput').value = "";
+            document.getElementById('historyList').innerHTML = '<div class="text-center py-8 text-slate-300 text-sm">Henüz tahmin yapılmadı.</div>';
+            document.getElementById('attemptCounter').innerText = "Toplam: 0 deneme";
+        }
+
+        function toggleRules() {
+            const box = document.getElementById('rulesBox');
+            box.classList.toggle('hidden');
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                makeGuess();
+            }
+        }
+
+        // 2. Oyuncunun tahmin mekanizması
+        function makeGuess() {
+            if (!gameActive) return;
+
+            const inputField = document.getElementById('guessInput');
+            const guess = inputField.value.trim();
+
+            if (guess.length !== 4 || isNaN(guess)) {
+                showGameMessage("Lütfen 4 haneli bir sayı girin.");
+                return;
+            }
+
+            // Tahmin rakamları farklı mı kontrolü
+            const uniqueSet = new Set(guess);
+            if (uniqueSet.size !== 4) {
+                showGameMessage("Hata: Girdiğiniz sayının rakamları birbirinden farklı olmalıdır!");
+                return;
+            }
+
+            attempts++;
+            document.getElementById('attemptCounter').innerText = `Toplam: ${attempts} deneme`;
+            inputField.value = "";
+
+            let plusCount = 0;
+            let minusCount = 0;
+
+            // +1 / -1 hesaplama mantığı
+            for (let i = 0; i < 4; i++) {
+                if (guess[i] === secretCode[i]) {
+                    plusCount++;
+                } else if (secretCode.includes(guess[i])) {
+                    minusCount++;
+                }
+            }
+
+            const historyList = document.getElementById('historyList');
+            if (attempts === 1) {
+                historyList.innerHTML = "";
+            }
+
+            let badgeHtml = "";
+            if (plusCount > 0) {
+                badgeHtml += `<span class="bg-emerald-50 text-emerald-600 font-bold px-2.5 py-1 rounded-lg text-xs mr-1">+${plusCount}</span>`;
+            }
+            if (minusCount > 0) {
+                badgeHtml += `<span class="bg-amber-50 text-amber-600 font-bold px-2.5 py-1 rounded-lg text-xs">-${minusCount}</span>`;
+            }
+            if (plusCount === 0 && minusCount === 0) {
+                badgeHtml += `<span class="bg-slate-100 text-slate-500 font-medium px-2.5 py-1 rounded-lg text-xs">Eşleşme yok</span>`;
+            }
+
+            const itemHtml = `
+                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 pop-animation">
+                    <span class="font-mono font-bold text-slate-700 text-base tracking-wider">${guess}</span>
+                    <div class="flex items-center gap-1">${badgeHtml}</div>
+                </div>
+            `;
+
+            historyList.insertAdjacentHTML('afterbegin', itemHtml);
+
+            // Kazanma kontrolü
+            if (plusCount === 4) {
+                gameActive = false;
+                document.getElementById('finalAttempts').innerText = attempts;
+                document.getElementById('winModal').classList.remove('hidden');
+            }
+        }
+
+        // Oyunu başa sar / rol değiştir
+        function resetGame() {
+            secretCode = "";
+            attempts = 0;
+            document.getElementById('winModal').classList.add('hidden');
+            document.getElementById('gamePhase').classList.add('hidden');
+            document.getElementById('setupPhase').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
